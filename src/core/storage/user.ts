@@ -1,16 +1,16 @@
 export const users = [
   {
-    "id": 1,
+    "id": 'uuid1',
     "login": "user1",
     "password": "password1"
   },
   {
-    "id": 2,
+    "id": 'uuid2',
     "login": "user2",
     "password": "password2"
   },
   {
-    "id": 3,
+    "id": 'uuid3',
     "login": "user3",
     "password": "password3"
   }

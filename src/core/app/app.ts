@@ -8,7 +8,8 @@ import { TodoStorageService } from '../storage/todo'
 import { ITodoStorageService } from '../storage/interface'
 import { IExpressService } from '../express/interface'
 import { ExpressService } from '../express'
-import { todoApiRouter } from '../router/todo'
+import { ITodoRouterService } from '../router/interface'
+import { TodoRouterServise } from '../router/todo'
 
 export class TestServer {
 
@@ -17,6 +18,7 @@ export class TestServer {
   mongoDBService: IMongoDBServise
   todoStorageService: ITodoStorageService
   expressService: IExpressService
+  todoRouterService: ITodoRouterService
 
   constructor() {
     this.configurationService = new ConfigurationService()
@@ -25,7 +27,9 @@ export class TestServer {
     this.todoStorageService = new TodoStorageService(this.mongoDBService, this.loggerService, this.configurationService)
 
     this.expressService = new ExpressService()
-    this.expressService.use('/api', todoApiRouter)
+    this.todoRouterService = new TodoRouterServise(this.todoStorageService)
+
+    this.expressService.use('/api', this.todoRouterService.getRouter())
   }
 
   async init() {

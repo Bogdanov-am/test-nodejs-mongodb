@@ -66,7 +66,7 @@ export class TodoStorageService implements ITodoStorageService {
         return {
           id: task._id.toString(),
           user_id: task.user_id,
-          name: task.Name
+          name: task.name
         }
       })
 
