@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "moduleResolution":"Node",
+    "target": "ES6",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "baseUrl": ".",
+    "alwaysStrict": true,
+    // "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "strictBindCallApply": true,
+  }
+}
