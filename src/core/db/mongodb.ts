@@ -20,9 +20,9 @@ export class MongoDBServise implements IMongoDBServise {
     this.connectionUri = this.configurationService.getConfiguration('MongoDB').uri
 
     if (!this.connectionUri) {
+      this.loggerService.logError('Error reading configuration for MongoDB!')
       throw new Error('Error reading configuration!')
     }
-    console.log(this.connectionUri)
  
     try {
       this.mongoClient = new MongoClient(this.connectionUri)
@@ -35,7 +35,7 @@ export class MongoDBServise implements IMongoDBServise {
   }
 
   async finally() {
-
+    this.mongoClient?.close()
   }
 
   getDatabase(databaseName: string): Db {
