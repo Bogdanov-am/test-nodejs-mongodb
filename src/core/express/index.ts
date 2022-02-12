@@ -1,13 +1,20 @@
-import { IExpressService } from "./interface";
+import { IExpressService } from './interface'
 import express, { Express, Router } from 'express'
+import { IConfigurationService } from '../configuration/interfaces'
+import { ILoggerService } from '../logger/interfaces'
+import { Server } from 'http'
 
 export class ExpressService implements IExpressService {
-  app: Express
+  private app: Express
+  private server: Server | undefined
+  private configurationService: IConfigurationService
+  private loggerService: ILoggerService
 
-  constructor() {
+  constructor(loggerService: ILoggerService, configurationService: IConfigurationService) {
     this.app = express()
 
-    // this.app.
+    this.configurationService = configurationService
+    this.loggerService = loggerService
   }
 
   use(path: string, router: Router) {
@@ -15,17 +22,21 @@ export class ExpressService implements IExpressService {
   }
 
   async init(): Promise<void> {
+    const port = this.configurationService.getConfiguration('Express').port
+
+    this.loggerService.logInfo('Http server starting...')
     let connectPromise = new Promise<void>((resolve, reject) => {
-      this.app.listen(1000, () => {
+      this.server = this.app.listen(port, () => {
         resolve()
       })
     })
 
     await connectPromise
-    console.log('Server started!')
+    this.loggerService.logInfo('Http server successfully started!')
   }
 
   async finally(): Promise<void> {
-
+    this.server?.close()
+    this.loggerService.logInfo('Http server closed.')
   }
 }

@@ -26,11 +26,10 @@ export class WinstonLogger implements ILoggerService {
   }
 
   async init(): Promise<void> {
-    return
+    this.logInfo('Logger service started successfully!')
   }
 
   async finally(): Promise<void> {
-    return
   }
 
   logInfo(msg: string): void {

@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express'
 import crypto from 'crypto'
 import { users } from '../storage/user'
 import { ITodoStorageService } from '../storage/interface'
-import { RequestError } from '../storage/todo'
+import { AccessError, NoMatchesError, RequestError } from '../storage/todoStorage'
 import { ITodoRouterService as ITodoRouterService } from './interface'
 
 export interface CustomRequest extends Request {
@@ -22,7 +22,11 @@ export class TodoRouterServise implements ITodoRouterService {
     this.todoApiRouter.use(this.authMiddleware)
 
     this.todoApiRouter.post('/auth', this.postAuth)
-    this.todoApiRouter.get('/tasks', this.getTasks)
+    this.todoApiRouter.get('/task', this.getTasks)
+    this.todoApiRouter.get('/task/:id', this.getTask)
+    this.todoApiRouter.put('/task/:id', this.updateTask)
+    this.todoApiRouter.post('/task', this.addTask)
+    this.todoApiRouter.delete('/task/:id', this.deleteTask)
   }
 
   getRouter(): express.Router {
@@ -94,6 +98,101 @@ export class TodoRouterServise implements ITodoRouterService {
         return res.status(200).send(tasks)
       } catch (error) {
         return res.status(500).send('Internal Server Error')
+      }
+    } else {
+      res.status(401).send('Unauthorized')
+    }
+  }
+
+  private getTask = async (req: CustomRequest, res: Response) => {
+
+    const taskId = req?.params?.id
+
+    if (!taskId) {
+      return res.status(400).send('Bad Request')
+    }
+
+    if (req.user) {
+      try {
+        let task = await this.todoStorageService.getTask(req.user.id, taskId)
+        return res.status(200).send(task)
+      } catch (error) {
+        if ( error instanceof AccessError) {
+          return res.status(403).send('Forbidden')
+        } else if (error instanceof NoMatchesError) {
+          return res.status(404).send('Not Found')
+        } else {
+          return res.status(500).send('Internal Server Error')
+        }
+      }
+    } else {
+      res.status(401).send('Unauthorized')
+    }
+  }
+
+  private updateTask = async (req: CustomRequest, res: Response) => {
+
+    const taskId = req?.params?.id
+    const updatedName = req.body?.name
+
+    if (!taskId || !updatedName) {
+      return res.status(400).send('Bad Request')
+    }
+
+    if (req.user) {
+      try {
+        await this.todoStorageService.updateTask(req.user.id, taskId, updatedName)
+        return res.status(202).send('Accepted')
+      } catch (error) {
+        if ( error instanceof NoMatchesError) {
+          return res.status(404).send('Not Found')
+        } else {
+          return res.status(304).send('Not Modified')
+        }
+      }
+    } else {
+      res.status(401).send('Unauthorized')
+    }
+  }
+
+  private addTask = async (req: CustomRequest, res: Response) => {
+
+    const taskName = req.body?.name
+
+    if (!taskName) {
+      return res.status(400).send('Bad Request')
+    }
+
+    if (req.user) {
+      try {
+        let taskId = await this.todoStorageService.addTask(req.user.id, taskName)
+        return res.status(201).send(taskId)
+      } catch (error) {
+        return res.status(500).send('Internal Server Error')
+      }
+    } else {
+      res.status(401).send('Unauthorized')
+    }
+  }
+
+  private deleteTask = async (req: CustomRequest, res: Response) => {
+
+    const taskId = req?.params?.id
+
+    if (!taskId) {
+      return res.status(400).send('Bad Request')
+    }
+
+    if (req.user) {
+      try {
+        await this.todoStorageService.deleteTask(req.user.id, taskId)
+        return res.status(202).send('Accepted')
+      } catch (error) {
+        if (error instanceof NoMatchesError) {
+          return res.status(404).send('Not Found')
+        } else {
+          return res.status(400).send('Bad Request')
+        }
       }
     } else {
       res.status(401).send('Unauthorized')

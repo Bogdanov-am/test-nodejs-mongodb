@@ -4,12 +4,12 @@ import { IConfigurationService } from '../configuration/interfaces'
 import { ConfigurationService } from '../configuration/configuration'
 import { IMongoDBServise } from '../db/interfaces'
 import { MongoDBServise } from '../db/mongodb'
-import { TodoStorageService } from '../storage/todo'
+import { TodoStorageService } from '../storage/todoStorage'
 import { ITodoStorageService } from '../storage/interface'
 import { IExpressService } from '../express/interface'
 import { ExpressService } from '../express'
 import { ITodoRouterService } from '../router/interface'
-import { TodoRouterServise } from '../router/todo'
+import { TodoRouterServise } from '../router/todoRouter'
 
 export class TestServer {
 
@@ -21,18 +21,20 @@ export class TestServer {
   todoRouterService: ITodoRouterService
 
   constructor() {
-    this.configurationService = new ConfigurationService()
     this.loggerService = new WinstonLoggerService()
+    this.configurationService = new ConfigurationService(this.loggerService)
+    
     this.mongoDBService = new MongoDBServise(this.loggerService, this.configurationService)
     this.todoStorageService = new TodoStorageService(this.mongoDBService, this.loggerService, this.configurationService)
 
-    this.expressService = new ExpressService()
+    this.expressService = new ExpressService(this.loggerService, this.configurationService)
     this.todoRouterService = new TodoRouterServise(this.todoStorageService)
 
     this.expressService.use('/api', this.todoRouterService.getRouter())
   }
 
   async init() {
+    console.log('Application start!')
     try {
       await this.loggerService.init()
       await this.configurationService.init()
@@ -49,6 +51,7 @@ export class TestServer {
   }
 
   async finally () {
+    await this.expressService.finally()
     await this.mongoDBService.finally()
   }
 }
