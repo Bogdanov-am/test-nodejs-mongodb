@@ -2,21 +2,24 @@ import express, { Request, Response } from 'express'
 import crypto from 'crypto'
 import { users } from '../storage/user'
 import { ITodoStorageService } from '../storage/interface'
-import { AccessError, NoMatchesError, RequestError } from '../storage/todoStorage'
+import { AccessError, NoMatchesError } from '../storage/todoStorage'
 import { ITodoRouterService as ITodoRouterService } from './interface'
+import { ILoggerService } from '../logger/interfaces'
 
-export interface CustomRequest extends Request {
+interface CustomRequest extends Request {
   user?: { id: string, login: string }
 }
 
 export class TodoRouterServise implements ITodoRouterService {
   private todoStorageService: ITodoStorageService
+  private loggerService: ILoggerService
   private todoApiRouter = express.Router()
 
   readonly tokenKey = '1a2b-3c4d-5e6f-7g8h'
 
-  constructor(todoStorageService) {
+  constructor(loggerService: ILoggerService, todoStorageService: ITodoStorageService) {
     this.todoStorageService = todoStorageService
+    this.loggerService = loggerService
 
     this.todoApiRouter.use(express.json())
     this.todoApiRouter.use(this.authMiddleware)
@@ -33,12 +36,11 @@ export class TodoRouterServise implements ITodoRouterService {
     return this.todoApiRouter
   }
 
-  private authMiddleware = (req: CustomRequest, res: Response, next) => {
+  private authMiddleware = (req: CustomRequest, res: Response, next: () => void) => {
+    // Здесь же можно внедрить функцию определения ролей
     try {
       if (req.headers.authorization) {
-        let tokenParts = req.headers.authorization
-          .split(' ')[1]
-          .split('.')
+        let tokenParts = req.headers.authorization.split(' ')[1].split('.')
 
         let signature = crypto
           .createHmac('SHA256', this.tokenKey)
@@ -52,7 +54,7 @@ export class TodoRouterServise implements ITodoRouterService {
         }
       }
     } catch (error) {
-
+      this.loggerService.logError(error)
     } finally {
       next()
     }
@@ -60,35 +62,30 @@ export class TodoRouterServise implements ITodoRouterService {
 
 
   private postAuth = (req: CustomRequest, res: Response) => {
-    if (req.body.login && req.body.password) {
-      for (let user of users) {
-        if (
-          req.body.login === user.login &&
-          req.body.password === user.password
-        ) {
-          let head = Buffer.from(
-            JSON.stringify({ alg: 'HS256', typ: 'jwt' })
-          ).toString('base64')
-          let body = Buffer.from(JSON.stringify(user)).toString(
-            'base64'
-          )
-          let signature = crypto
-            .createHmac('SHA256', this.tokenKey)
-            .update(`${head}.${body}`)
-            .digest('base64')
-
-          return res.status(200).json({
-            id: user.id,
-            login: user.login,
-            token: `${head}.${body}.${signature}`,
-          })
-        }
-      }
-    } else {
-      return res.status(404).json({ message: 'Not valid request!' })
+    if (!req.body.login || !req.body.password) {
+      return res.status(404).send('Not valid request!')
     }
 
-    return res.status(404).json({ message: 'User not found' })
+    const user = users.find(user => req.body.login === user.login && req.body.password === user.password)
+
+    if (user) {
+      let head = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'jwt' })).toString('base64')
+
+      let body = Buffer.from(JSON.stringify(user)).toString('base64')
+
+      let signature = crypto
+        .createHmac('SHA256', this.tokenKey)
+        .update(`${head}.${body}`)
+        .digest('base64')
+
+      return res.status(200).json({
+        id: user.id,
+        login: user.login,
+        token: `${head}.${body}.${signature}`,
+      })
+    } else {
+      return res.status(404).send('User not found')
+    }
   }
 
   private getTasks = async (req: CustomRequest, res: Response) => {
@@ -117,7 +114,7 @@ export class TodoRouterServise implements ITodoRouterService {
         let task = await this.todoStorageService.getTask(req.user.id, taskId)
         return res.status(200).send(task)
       } catch (error) {
-        if ( error instanceof AccessError) {
+        if (error instanceof AccessError) {
           return res.status(403).send('Forbidden')
         } else if (error instanceof NoMatchesError) {
           return res.status(404).send('Not Found')
@@ -144,7 +141,7 @@ export class TodoRouterServise implements ITodoRouterService {
         await this.todoStorageService.updateTask(req.user.id, taskId, updatedName)
         return res.status(202).send('Accepted')
       } catch (error) {
-        if ( error instanceof NoMatchesError) {
+        if (error instanceof NoMatchesError) {
           return res.status(404).send('Not Found')
         } else {
           return res.status(304).send('Not Modified')

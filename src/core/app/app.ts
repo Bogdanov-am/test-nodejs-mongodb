@@ -28,7 +28,7 @@ export class TestServer {
     this.todoStorageService = new TodoStorageService(this.mongoDBService, this.loggerService, this.configurationService)
 
     this.expressService = new ExpressService(this.loggerService, this.configurationService)
-    this.todoRouterService = new TodoRouterServise(this.todoStorageService)
+    this.todoRouterService = new TodoRouterServise(this.loggerService, this.todoStorageService)
 
     this.expressService.use('/api', this.todoRouterService.getRouter())
   }

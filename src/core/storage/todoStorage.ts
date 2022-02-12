@@ -6,21 +6,21 @@ import { ITodoStorageService, Task } from './interface'
 import { ObjectId } from 'mongodb'
 
 export class RequestError extends Error {
-  constructor(message) {
+  constructor(message: string) {
     super(message)
     this.name = 'RequestError'
   }
 }
 
 export class NoMatchesError extends Error {
-  constructor(message) {
+  constructor(message: string) {
     super(message)
     this.name = 'NoMatchesError'
   }
 }
 
 export class AccessError extends Error {
-  constructor(message) {
+  constructor(message: string) {
     super(message)
     this.name = 'AccessError'
   }
