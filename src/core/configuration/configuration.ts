@@ -14,7 +14,7 @@ export class ConfigurationService implements IConfigurationService {
   //TODO: Заглушка, чтение данных из файла либо из переменных среды 
   // Также можно реализовать чтение разных настроек для dev и production сборки
   async init() {
-    this.loggerService.logInfo('Start reading application configuration...')
+    this.loggerService.logWarn('Start reading application configuration...')
 
     dotenv.config()
 

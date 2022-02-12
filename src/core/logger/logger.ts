@@ -16,17 +16,21 @@ export class WinstonLogger implements ILoggerService {
         new transports.File({ filename: 'logs/error.log', level: 'error' }),
         new transports.File({ filename: 'logs/combined.log' }),
       ],
-    });
+    })
+
+   
 
     if (process.env.NODE_ENV !== 'production') {
-      this.logger.add(new transports.Console({
-        format: format.simple(),
-      }));
+      this.logger.add(new (transports.Console)({
+        format: format.combine(
+          format.colorize(),
+          format.simple(),
+        )
+      }))
     }
   }
 
   async init(): Promise<void> {
-    this.logInfo('Logger service started successfully!')
   }
 
   async finally(): Promise<void> {

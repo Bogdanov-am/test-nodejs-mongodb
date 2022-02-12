@@ -17,15 +17,15 @@ export class MongoDBServise implements IMongoDBServise {
   }
 
   async init() {
-    this.loggerService.logInfo('Reading configuration MongoDB...')
+    this.loggerService.logWarn('Reading configuration MongoDB...')
     this.connectionUri = this.configurationService.getConfiguration('MongoDB').uri
 
     if (!this.connectionUri) {
-      this.loggerService.logError('Error reading configuration for MongoDB!')
+      this.loggerService.logError('Error reading configuration for MongoDB! There is not "MongoDB.uri" in config.')
       throw new Error('Error reading configuration!')
     }
 
-    this.loggerService.logInfo('Attempt to connect to MongoDB...')
+    this.loggerService.logWarn('Attempt to connect to MongoDB...')
  
     try {
       this.mongoClient = new MongoClient(this.connectionUri)

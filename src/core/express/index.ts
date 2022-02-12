@@ -24,7 +24,7 @@ export class ExpressService implements IExpressService {
   async init(): Promise<void> {
     const port = this.configurationService.getConfiguration('Express').port
 
-    this.loggerService.logInfo('Http server starting...')
+    this.loggerService.logWarn('Http server starting...')
     let connectPromise = new Promise<void>((resolve, reject) => {
       this.server = this.app.listen(port, () => {
         resolve()

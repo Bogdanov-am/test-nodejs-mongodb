@@ -34,9 +34,9 @@ export class TestServer {
   }
 
   async init() {
-    console.log('Application start!')
+    this.loggerService.logWarn('Application initialization started...')
+
     try {
-      await this.loggerService.init()
       await this.configurationService.init()
       await this.mongoDBService.init()
 
@@ -44,10 +44,12 @@ export class TestServer {
 
       await this.expressService.init()
     } catch (error) {
+      this.loggerService.logError('Application stopped during initialization!')
       console.log(error)
       process.exit()
     }
 
+    this.loggerService.logInfo('Application successfully started!')
   }
 
   async finally () {
