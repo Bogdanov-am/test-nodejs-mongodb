@@ -65,7 +65,6 @@ export class TodoStorageService implements ITodoStorageService {
     return tasks.map(task => {
       return {
         id: task._id.toString(),
-        user_id: task.user_id,
         name: task.name
       }
     })
@@ -81,7 +80,6 @@ export class TodoStorageService implements ITodoStorageService {
     } else if (res.user_id.toString() === userId) {
       return {
         id: res._id.toString(),
-        user_id: res.user_id,
         name: res.name
       }
     } else {

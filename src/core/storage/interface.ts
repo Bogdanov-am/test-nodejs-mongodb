@@ -4,7 +4,6 @@ import type { ObjectId } from 'mongodb'
 export interface Task {
   id: string
   name: string
-  user_id: string
 }
 
 export interface ITodoStorageService extends IService {
